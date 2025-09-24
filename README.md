@@ -10,4 +10,6 @@ Currently tested games:
 - Shrek Smash n' Crash Racing
 
 ## Usage rights
-Feel free to use any part of this tool in any project you'd like.
+Feel free to use any part of this tool (minus the output XM files, as they're copyrighted) in almost any project you'd like.
+
+My only request is that you do not charge people for it.
