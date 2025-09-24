@@ -8,3 +8,6 @@ Currently tested games:
 - Fantastic 4: Flame On
 - Gumby Vs. the Astrobots
 - Shrek Smash n' Crash Racing
+
+## Usage rights
+Feel free to use any part of this tool in any project you'd like.
