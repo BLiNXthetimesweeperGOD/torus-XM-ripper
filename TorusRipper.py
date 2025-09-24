@@ -48,7 +48,7 @@ for file in files:
                 patternCount, unknown, channelCount, padding = mus.read(4)
 
                 #Defined here because we need the channel count
-                xm = ExtendedModuleWriter(name="Torus Module {song}",tracker_name="Torus Games -> XM", num_channels=channelCount)
+                xm = ExtendedModuleWriter(name=f"Torus Module {song}",tracker_name="Torus Games -> XM", num_channels=channelCount)
 
                 patternOrderTableLength = (mus.read(1)[0]-8) // 2
                 mus.seek(-1, 1)
@@ -157,3 +157,4 @@ for file in files:
         print(f"{file} doesn't contain a DPAK file or a MUSC file")
         
                 
+
