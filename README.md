@@ -5,9 +5,9 @@ Please note that a few of their games won't work because they use a different so
 
 ## Currently tested games
 - Curious George
-- Fantastic 4: Flame On
-- Gumby Vs. the Astrobots
-- Shrek Smash n' Crash Racing
+- Fantastic 4: Flame On (some of the conversions don't end when they should)
+- Gumby Vs. the Astrobots (some of the conversions don't end when they should)
+- Shrek Smash n' Crash Racing (some of the conversions have broken pattern orders)
 
 ## Usage instructions
 - Run the script 
