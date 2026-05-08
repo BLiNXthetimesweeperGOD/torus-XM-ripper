@@ -13,10 +13,8 @@ except:
 rowCount = 64 #This format's patterns have a fixed row count of 64
 
 for file in files:
-    #Save the output files here
     outPath = fileTools.folder(file)+"/"+fileTools.nameNoExt(file)+"/"
     
-    #Check if the output folder exists and create it if it doesn't
     if not os.path.exists(outPath): 
         os.makedirs(outPath)
 
@@ -38,68 +36,80 @@ for file in files:
                 currentMaxPatternNumber = 0
                 sampleID = 0
                 
-                #This time, I'm parsing the module first so the output can be more optimized
+                #This time, I'm parsing the module first so the output can be more optimized (my old script was a nightmare)
                 songOffset = LE_Unpack.uint(mus.read(4)) + songTableOffset
                 nextSong = mus.tell()
 
                 mus.seek(songOffset)
 
-                version = mus.read(4)
+                version = mus.read(4) #Likely a version number
                 patternCount, unknown, channelCount, padding = mus.read(4)
 
-                #Defined here because we need the channel count
+                #Defined here because the channel count was needed
                 xm = ExtendedModuleWriter(name=f"Torus Module {song}",tracker_name="Torus Games -> XM", num_channels=channelCount)
 
+                #The "startRelativeToSongOffset" value can be used to get the length of the table
                 patternOrderTableLength = (mus.read(1)[0]-8) // 2
                 mus.seek(-1, 1)
 
+                #Start parsing the pattern order table...
                 for patternInfo in range(patternOrderTableLength):
                     startRelativeToSongOffset = mus.read(1)[0]
-                    patternIndex = mus.read(1)[0] // 8
+                    patternIndex = mus.read(1)[0]
+                    value = patternIndex // 8
+                    
+                    patternIndex = value
+                        
                     if patternIndex > currentMaxPatternNumber:
                         currentMaxPatternNumber = patternIndex
                     if patternIndex > patternCount:
                         break #Unused patterns sometimes show up and cause problems
                     orderTable.append(patternIndex)
 
+                #Start parsing the pattern data...
                 mus.seek(songOffset+startRelativeToSongOffset)
 
                 for patternID in range(currentMaxPatternNumber+1):
                     pat = XMPattern(num_rows=rowCount, num_channels=channelCount)
 
+                    #The channels are stored one after the other
                     for row in range(rowCount):
                         for channel in range(channelCount):
                             effect, sample, note, effectParameter = mus.read(4)
                             
-                            if sample not in usedSamples: #Used later for optimization
+                            if sample not in usedSamples: #Used later for optimization (unused samples can be skipped to save on space)
                                 usedSamples.append(sample)
                                 
                             effectNibble = effect >> 4
-                            unknownNibble = effect & 0xF #The purpose of this needs to be found
+                            unknownNibble = effect & 4 #The purpose of this needs to be found - it isn't always 0
 
                             if note != 0:
-                                pat.rows[row][channel] = XMNote(note, sample, 0, effectNibble, effectParameter)
+                                pat.rows[row][channel] = XMNote(note+12, sample, unknownNibble, effectNibble, effectParameter)
                             else: #Just in case an effect runs with no note
-                                pat.rows[row][channel] = XMNote(0, sample, 0, effectNibble, effectParameter)
-                                
+                                pat.rows[row][channel] = XMNote(0, sample, unknownNibble, effectNibble, effectParameter)
+
+                    #Add this pattern to the XM writer 
                     xm.add_pattern(pat)
-                    
+
                 xm.set_order(orderTable)
 
                 mus.seek(sampleTableOffset)
 
                 unknownVariable = LE_Unpack.uint(mus.read(4)) #Originally thought to be sample count
-
+                
+                rawSamples = bytearray()
+                
                 while True:
                     try:
                         unused = mus.read(1)
                         sampleOffset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000000
                         sampleLength = LE_Unpack.ushort(mus.read(2))*2
-                        samplePitch = mus.read(1)[0]
+                        samplePitch = mus.read(1)[0] & 0b1111
                         sampleVolume = mus.read(1)[0]
                         sampleLoopStart = LE_Unpack.ushort(mus.read(2))*2
                         sampleLoopLength = LE_Unpack.ushort(mus.read(2))*2
                         nextSample = mus.tell()
+                        
                         
                         if sampleOffset < 0:
                             sampleOffset = 0
@@ -112,6 +122,7 @@ for file in files:
 
                             mus.seek(sampleOffset)
                             sampleData = mus.read(sampleLength)
+                            rawSamples += sampleData + bytearray([0]*8000)
                             mus.seek(currentOffset)
 
                             pcm = [struct.unpack("b", bytes([x]))[0] for x in sampleData]
@@ -121,9 +132,9 @@ for file in files:
                                 pcm=pcm,
                                 is_16bit=False,
                                 volume=sampleVolume,
-                                fine_tune=samplePitch,
+                                fine_tune=samplePitch << 4,
                                 panning=128,
-                                relative_note=24,
+                                relative_note=12,
                                 loop_type=loopType,
                                 loop_start=sampleLoopStart,
                                 loop_length=sampleLoopLength,
@@ -147,6 +158,8 @@ for file in files:
                         
                     except:
                         break
+                with open(outPath+f"Samples_{song:02}.bin", "w+b") as o:
+                    o.write(rawSamples)
                 
                 xm.save(outPath+f"Torus_{song:02}.xm")
 
@@ -157,4 +170,3 @@ for file in files:
         print(f"{file} doesn't contain a DPAK file or a MUSC file")
         
                 
-
