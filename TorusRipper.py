@@ -43,6 +43,9 @@ for file in files:
                 mus.seek(songOffset)
 
                 version = mus.read(4) #Likely a version number
+                #if "space invaders" in file.lower():
+                #    channelCount, patternCount = mus.read(2)
+                #else:
                 patternCount, unknown, channelCount, padding = mus.read(4)
 
                 #Defined here because the channel count was needed
@@ -52,11 +55,33 @@ for file in files:
                 patternOrderTableLength = (mus.read(1)[0]-8) // 2
                 mus.seek(-1, 1)
 
+                patternTableOffset = mus.tell()
+                patternIndexList = []
+                #Go through the pattern order table and find the smallest non-0 value used for division later
+                for patternInfo in range(patternOrderTableLength):
+                    startRelativeToSongOffset = mus.read(1)[0]
+                    patternIndex = str(f'{mus.read(1)[0]:04}')
+                    patternIndexList.append(patternIndex)
+
+                uniquePatterns = list(set(patternIndexList))
+                
+                uniquePatterns.sort()
+                print(uniquePatterns)
+                
+                if len(uniquePatterns) > 1:
+                    patternSpacing = int(uniquePatterns[1])
+                    if patternSpacing == 10:
+                        patternSpacing = 5
+                else:
+                    patternSpacing=8 #Only 1 pattern, so this technically doesn't matter
+
+                mus.seek(patternTableOffset)
                 #Start parsing the pattern order table...
                 for patternInfo in range(patternOrderTableLength):
                     startRelativeToSongOffset = mus.read(1)[0]
                     patternIndex = mus.read(1)[0]
-                    value = patternIndex // 8
+
+                    value = patternIndex//patternSpacing
                     
                     patternIndex = value
                         
@@ -101,14 +126,26 @@ for file in files:
                 
                 while True:
                     try:
-                        unused = mus.read(1)
-                        sampleOffset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000000
-                        sampleLength = LE_Unpack.ushort(mus.read(2))*2
-                        samplePitch = mus.read(1)[0] & 0b1111
-                        sampleVolume = mus.read(1)[0]
-                        sampleLoopStart = LE_Unpack.ushort(mus.read(2))*2
-                        sampleLoopLength = LE_Unpack.ushort(mus.read(2))*2
-                        nextSample = mus.tell()
+                        if "space invaders" in file.lower():
+                            sampleOffset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000002
+                            sampleLength = LE_Unpack.ushort(mus.read(2))*2
+                            
+                            sampleVolume = 127#mus.read(1)[0]
+                            samplePitch = mus.read(1)[0] & 0b1111
+                            sampleLoopStart = 0#LE_Unpack.ushort(mus.read(2))*2
+                            sampleLoopLength =0# LE_Unpack.ushort(mus.read(2))*2
+                            mus.read(6)
+                            
+                            nextSample = mus.tell()
+                        else:
+                            unused = mus.read(1)
+                            sampleOffset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000004
+                            sampleLength = LE_Unpack.ushort(mus.read(2))*2
+                            samplePitch = mus.read(1)[0] & 0b1111
+                            sampleVolume = mus.read(1)[0]
+                            sampleLoopStart = LE_Unpack.ushort(mus.read(2))*2
+                            sampleLoopLength = LE_Unpack.ushort(mus.read(2))*2
+                            nextSample = mus.tell()
                         
                         
                         if sampleOffset < 0:
