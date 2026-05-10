@@ -25,7 +25,8 @@ Please note that a few of their games won't work because they use a different so
 
 ### Games that use a different sound driver entirely
 - Doom II
-- Planet of the Apes
+- Jackie Chan Adventures (GAX)
+- Planet of the Apes (GAX)
 
 ## Usage instructions
 - Run the script 
