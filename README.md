@@ -4,21 +4,22 @@ A Python-based tool for ripping GBA games made by Torus Games to XM
 Please note that a few of their games won't work because they use a different sound driver. Don't make issues if a game throws the DPAK file error.
 
 ## Currently tested games
-- Backyard Football (some of the conversions have broken pattern orders)
-- Backyard Football 2006/2007 (basically perfect) (both games have the same modules)
+- Backyard Football (perfect?)
+- Backyard Football 2006/2007 (perfect?)
 - Cabella's Big Game Hunter (accuracy is unknown, but it converts)
 - Curious George (perfect?)
 - Dead to Rights (accuracy is unknown, but it converts)
 - Duke Nukem Advance (accuracy is unknown, but it converts)
 - Fantastic 4 (accuracy is unknown, but it converts)
-- Fantastic 4: Flame On (some of the conversions don't end when they should)
-- Gumby Vs. the Astrobots (some of the conversions don't end when they should)
+- Fantastic 4: Flame On (perfect?)
+- Gumby Vs. the Astrobots (perfect?)
 - Ice Nine (accuracy is unknown, but it converts)
 - Marvel's The Invincible Iron Man (perfect?)
-- Pitfall: The Lost Expedition (accuracy is unknown, but it converts)
-- Shrek Smash n' Crash Racing (some of the conversions have broken pattern orders)
+- Minority Report (accuracy is unknown, but it converts)
+- Pitfall: The Lost Expedition (perfect?)
+- Shrek Smash n' Crash Racing (perfect?)
 - Spider-Man: Battle for New York (perfect?) (requires you to extract the MUSC section and put it into a DPAK file first)
-- Sportsman's Pack: Cabela's Big Game Hunter + Rapala Pro Fishing (accuracy is unknown, but it converts)
+- Sportsman's Pack: Cabela's Big Game Hunter + Rapala Pro Fishing (perfect?)
 
 ### Completely broken
 - Space Invaders (a MUSC section is found and something gets decoded, but the audio is a broken mess)
