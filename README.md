@@ -21,8 +21,8 @@ Please note that a few of their games won't work because they use a different so
 - Spider-Man: Battle for New York (perfect?) (requires you to extract the MUSC section and put it into a DPAK file first)
 - Sportsman's Pack: Cabela's Big Game Hunter + Rapala Pro Fishing (perfect?)
 
-### Completely broken
-- Space Invaders (a MUSC section is found and something gets decoded, but the audio is a broken mess)
+### Broken
+- Space Invaders (uses an earlier version of the sound driver, support for it is being worked on)
 
 ### Games that use a different sound driver entirely
 - Doom II
