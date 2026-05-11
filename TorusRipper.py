@@ -43,10 +43,13 @@ for file in files:
                 mus.seek(songOffset)
 
                 version = mus.read(4) #Likely a version number
-                #if "space invaders" in file.lower():
-                #    channelCount, patternCount = mus.read(2)
-                #else:
-                patternCount, unknown, channelCount, padding = mus.read(4)
+                
+                if "space invaders" in file.lower():
+                    channelCount, patternCount = mus.read(2)
+                    channelCount -= 1
+                else:
+                    patternCount, unknown, channelCount, padding = mus.read(4)
+                    print(unknown)
 
                 #Defined here because the channel count was needed
                 xm = ExtendedModuleWriter(name=f"Torus Module {song}",tracker_name="Torus Games -> XM", num_channels=channelCount)
@@ -93,28 +96,54 @@ for file in files:
 
                 #Start parsing the pattern data...
                 mus.seek(songOffset+startRelativeToSongOffset)
+                if "space invaders" in file.lower():
+                    for patternID in range(currentMaxPatternNumber+1):
+                        pat = XMPattern(num_rows=rowCount, num_channels=channelCount)
 
-                for patternID in range(currentMaxPatternNumber+1):
-                    pat = XMPattern(num_rows=rowCount, num_channels=channelCount)
-
-                    #The channels are stored one after the other
-                    for row in range(rowCount):
-                        for channel in range(channelCount):
-                            effect, sample, note, effectParameter = mus.read(4)
-                            
-                            if sample not in usedSamples: #Used later for optimization (unused samples can be skipped to save on space)
-                                usedSamples.append(sample)
+                        #The channels are stored one after the other
+                        
+                        for row in range(rowCount):
+                            for channel in range(channelCount):
+                                effect, sample, note, effectParameter = mus.read(4)
+                                #print(hex(effect), hex(sample), hex(note), hex(effectParameter))
+                                #input()
                                 
-                            effectNibble = effect >> 4
-                            unknownNibble = effect & 4 #The purpose of this needs to be found - it isn't always 0
+                                if sample not in usedSamples: #Used later for optimization (unused samples can be skipped to save on space)
+                                    usedSamples.append(sample)
+                                    
+                                effectNibble = effect >> 4
+                                unknownNibble = effect & 4 #The purpose of this needs to be found - it isn't always 0
 
-                            if note != 0:
-                                pat.rows[row][channel] = XMNote(note+12, sample, unknownNibble, effectNibble, effectParameter)
-                            else: #Just in case an effect runs with no note
-                                pat.rows[row][channel] = XMNote(0, sample, unknownNibble, effectNibble, effectParameter)
+                                if note != 0:
+                                    pat.rows[row][channel] = XMNote(note, sample, unknownNibble, effectNibble, effectParameter)
+                                else: #Just in case an effect runs with no note
+                                    pat.rows[row][channel] = XMNote(0, sample, unknownNibble, effectNibble, effectParameter)
 
-                    #Add this pattern to the XM writer 
-                    xm.add_pattern(pat)
+                        #Add this pattern to the XM writer 
+                        xm.add_pattern(pat)
+                else:
+                    for patternID in range(currentMaxPatternNumber+1):
+                        pat = XMPattern(num_rows=rowCount, num_channels=channelCount)
+
+                        #The channels are stored one after the other
+                        
+                        for row in range(rowCount):
+                            for channel in range(channelCount):
+                                effect, sample, note, effectParameter = mus.read(4)
+                                
+                                if sample not in usedSamples: #Used later for optimization (unused samples can be skipped to save on space)
+                                    usedSamples.append(sample)
+                                    
+                                effectNibble = effect >> 4
+                                unknownNibble = effect & 4 #The purpose of this needs to be found - it isn't always 0
+
+                                if note != 0:
+                                    pat.rows[row][channel] = XMNote(note+12, sample, unknownNibble, effectNibble, effectParameter)
+                                else: #Just in case an effect runs with no note
+                                    pat.rows[row][channel] = XMNote(0, sample, unknownNibble, effectNibble, effectParameter)
+
+                        #Add this pattern to the XM writer 
+                        xm.add_pattern(pat)
 
                 xm.set_order(orderTable)
 
@@ -130,11 +159,18 @@ for file in files:
                             sampleOffset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000002
                             sampleLength = LE_Unpack.ushort(mus.read(2))*2
                             
-                            sampleVolume = 127#mus.read(1)[0]
+                            
                             samplePitch = mus.read(1)[0] & 0b1111
+                            samplePitch = mus.read(1)[0] & 0b1111
+                            sampleVolume = mus.read(1)[0]
+                            mus.seek(4, 1)
                             sampleLoopStart = 0#LE_Unpack.ushort(mus.read(2))*2
-                            sampleLoopLength =0# LE_Unpack.ushort(mus.read(2))*2
-                            mus.read(6)
+                            sampleLoopLength = 0#LE_Unpack.ushort(mus.read(2))*2
+
+                            sample2Offset = (LE_Unpack.u24(mus.read(3))) + (mus.tell()) - 0x1000002
+                            sampleLength = sample2Offset-sampleOffset
+
+                            mus.seek(-3, 1)
                             
                             nextSample = mus.tell()
                         else:
@@ -163,19 +199,33 @@ for file in files:
                             mus.seek(currentOffset)
 
                             pcm = [struct.unpack("b", bytes([x]))[0] for x in sampleData]
-                            
-                            xmsample = XMSample(
-                                name=f"SAMPLE_{sampleID:02d}",
-                                pcm=pcm,
-                                is_16bit=False,
-                                volume=sampleVolume,
-                                fine_tune=samplePitch << 4,
-                                panning=128,
-                                relative_note=12,
-                                loop_type=loopType,
-                                loop_start=sampleLoopStart,
-                                loop_length=sampleLoopLength,
-                            )
+
+                            if "space invaders" in file.lower():
+                                xmsample = XMSample(
+                                    name=f"SAMPLE_{sampleID:02d}",
+                                    pcm=pcm,
+                                    is_16bit=False,
+                                    volume=sampleVolume,
+                                    fine_tune=samplePitch << 4,
+                                    panning=128,
+                                    relative_note=36,
+                                    loop_type=loopType,
+                                    loop_start=sampleLoopStart,
+                                    loop_length=sampleLoopLength,
+                                )
+                            else:
+                                xmsample = XMSample(
+                                    name=f"SAMPLE_{sampleID:02d}",
+                                    pcm=pcm,
+                                    is_16bit=False,
+                                    volume=sampleVolume,
+                                    fine_tune=samplePitch << 4,
+                                    panning=128,
+                                    relative_note=12,
+                                    loop_type=loopType,
+                                    loop_start=sampleLoopStart,
+                                    loop_length=sampleLoopLength,
+                                )
                             instrument.samples.append(xmsample)
                         else:
                             
