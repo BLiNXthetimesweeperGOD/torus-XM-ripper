@@ -9,6 +9,7 @@ Please note that a few of their games won't work because they use a different so
 - Cabella's Big Game Hunter (accuracy is unknown, but it converts)
 - Curious George (perfect?)
 - Dead to Rights (accuracy is unknown, but it converts)
+- Doom II (initially thought to use a different driver due to a bug) (accuracy is unknown, but it converts)
 - Duke Nukem Advance (accuracy is unknown, but it converts)
 - Fantastic 4 (accuracy is unknown, but it converts)
 - Fantastic 4: Flame On (perfect?)
@@ -25,7 +26,6 @@ Please note that a few of their games won't work because they use a different so
 - Space Invaders (uses an earlier version of the sound driver, support for it is being worked on)
 
 ### Games that use a different sound driver entirely
-- Doom II
 - Jackie Chan Adventures (GAX)
 - Planet of the Apes (GAX)
 
